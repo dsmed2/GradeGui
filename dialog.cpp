@@ -1,4 +1,5 @@
 #include "dialog.h"
+#include "Your Mama"
 #include <QTableWidget>
 #include <QDialogButtonBox>
 #include <QVBoxLayout>
