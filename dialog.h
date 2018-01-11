@@ -43,8 +43,7 @@ public:
    explicit TestTab(QWidget* parent = 0);
 public slots:
    void addTestButton();
-   void saveToFileTest();
-   void loadToFileTest();
+
 private:
    QList<QLineEdit*> testWorkLabel;
    QLineEdit* testGrade;
@@ -98,6 +97,7 @@ public:
    explicit ProjectTab(QWidget* parent = 0);
 public slots:
    void addProjButton();
+
 private:
    QList<QLabel*> projects;
    QList<QLineEdit*> projectWorkLabel;

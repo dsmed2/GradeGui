@@ -7,6 +7,9 @@
 #include <QPushButton>
 #include <QTableWidget>
 #include <QFormLayout>
+#include <QFileDialog>
+#include <QMessageBox>
+#include <QtDebug>
 
 Dialog::Dialog(QWidget *parent)
    : QDialog(parent)
@@ -92,7 +95,7 @@ HomeworkTab::HomeworkTab(QWidget *parent) : QWidget(parent)
 
    connect(addButt, SIGNAL(clicked()), this, SLOT(addHomeButton()));
    connect(loadButt, SIGNAL(clicked()), this, SLOT(loadToFileHome()));
-   connect(addButt, SIGNAL(clicked()), this, SLOT(saveToFileHome()));
+   connect(saveButt, SIGNAL(clicked()), this, SLOT(saveToFileHome()));
 
    QHBoxLayout* descriptionLayout = new QHBoxLayout;
    descriptionLayout->addWidget(words);
@@ -175,10 +178,66 @@ void HomeworkTab::addHomeButton()
 
 void HomeworkTab::saveToFileHome()
 {
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save Grades"), "", tr("Homework Grades (*.abk);;All Files (*)"));
+
+    if (fileName.isEmpty())
+        return;
+    else
+    {
+        QFile file(fileName);
+        if (!file.open(QIODevice::WriteOnly))
+        {
+            QMessageBox::information(this, tr("Unable to open file"), file.errorString());
+            return;
+        }
+
+        QDataStream out(&file);
+        out.setVersion(QDataStream::Qt_4_5);
+        for (int i = 0; i < homeworkLabel.size(); i++)
+        {
+            QString temp(homeworkLabel[i]->text());
+            out << temp;
+        }
+    }
 }
 
 void HomeworkTab::loadToFileHome()
 {
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open Grades"), "", tr("Homework Grades (*.abk);;All Files (*)"));
+
+    if (fileName.isEmpty())
+        return;
+    else
+    {
+        QFile file(fileName);
+        if (!file.open(QIODevice::ReadOnly))
+        {
+            QMessageBox::information(this, tr("Unable to open file"), file.errorString());
+            return;
+        }
+
+        QDataStream in(&file);
+        in.setVersion(QDataStream::Qt_4_5);
+        QString tempStr;
+        QList<QString> temp;
+        for (int i = 0; i < homeworkLabel.size(); i++)
+        {
+            in >> tempStr;
+            temp.push_back(tempStr);
+        }
+
+        if (temp.isEmpty())
+        {
+            QMessageBox::information(this, tr("No Grades in file"), tr("The file you are attempting to open contains not grades"));
+        }
+        else
+        {
+            for (int i = 0; i < homeworkLabel.size(); i++)
+            {
+                homeworkLabel[i]->setText(temp[i]);
+            }
+        }
+    }
 }
 
 
@@ -328,14 +387,6 @@ void TestTab::addTestButton()
    testGrade->setText(tr("%1 %").arg(charSum));
    numTest->setText(charCount);
    letterTestLabel->setText(letter);
-}
-
-void TestTab::saveToFileTest()
-{
-}
-
-void TestTab::loadToFileTest()
-{
 }
 
 
@@ -572,7 +623,7 @@ ParticTab::ParticTab(QWidget *parent) : QWidget(parent)
 
    connect(addButt, SIGNAL(clicked()), this, SLOT(addPartButton()));
    connect(loadButt, SIGNAL(clicked()), this, SLOT(loadToPartHome()));
-   connect(addButt, SIGNAL(clicked()), this, SLOT(saveToPartHome()));
+   connect(saveButt, SIGNAL(clicked()), this, SLOT(saveToPartHome()));
 
    QFormLayout* quizLayout = new QFormLayout;
    for (int i = 0; i < 15; i++)
@@ -707,10 +758,103 @@ void ParticTab::addPartButton()
 
 void ParticTab::saveToPartHome()
 {
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save Grades"), "", tr("Participation Grades (*.abk);;All Files (*)"));
+
+    if (fileName.isEmpty())
+        return;
+    else
+    {
+        QFile file(fileName);
+        if (!file.open(QIODevice::WriteOnly))
+        {
+            QMessageBox::information(this, tr("Unable to open file"), file.errorString());
+            return;
+        }
+
+        QDataStream out(&file);
+        out.setVersion(QDataStream::Qt_4_5);
+        for (int i = 0; i < quizEditLabel.size(); i++)
+        {
+            QString temp(quizEditLabel[i]->text());
+            out << temp;
+        }
+        for (int i = 0; i < 32; i++)
+        {
+            if (attendance[i]->isChecked())
+                out << 1;
+            else
+                out << 0;
+        }
+        for (int i = 0; i < inclassEditLabel.size(); i++)
+        {
+            QString temp1 = inclassEditLabel[i]->text();
+            out << temp1;
+        }
+    }
 }
 
 void ParticTab::loadToPartHome()
 {
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open Grades"), "", tr("Participation Grades (*.abk);;All Files (*)"));
+
+    if (fileName.isEmpty())
+        return;
+    else
+    {
+        QFile file(fileName);
+        if (!file.open(QIODevice::ReadOnly))
+        {
+            QMessageBox::information(this, tr("Unable to open file"), file.errorString());
+            return;
+        }
+
+        QDataStream in(&file);
+        in.setVersion(QDataStream::Qt_4_5);
+        QString tempStr;
+        QList<QString> temp;
+        int tempInt;
+        QList<int> atten;
+        QString tempG;
+        QList<QString> tempIn;
+        for (int i = 0; i < quizEditLabel.size(); i++)
+        {
+            in >> tempStr;
+            temp.push_back(tempStr);
+        }
+        for (int i = 0; i < 32; i++)
+        {
+            in >> tempInt;
+            atten.push_back(tempInt);
+        }
+        for (int i = 0; i < inclassEditLabel.size(); i++)
+        {
+            in >> tempG;
+            tempIn.push_back(tempG);
+        }
+
+        if (temp.isEmpty() && atten.isEmpty() && inclassEditLabel.isEmpty())
+        {
+            QMessageBox::information(this, tr("No Grades in file"), tr("The file you are attempting to open contains not grades"));
+        }
+        else
+        {
+            for (int i = 0; i < quizEditLabel.size(); i++)
+            {
+                quizEditLabel[i]->setText(temp[i]);
+            }
+            for (int i = 0; i < 32; i++)
+            {
+                if (atten[i] == 0)
+                    ;
+                else
+                    attendance[i]->setChecked(true);
+            }
+            for (int i = 0; i < inclassEditLabel.size(); i++)
+            {
+                inclassEditLabel[i]->setText(tempIn[i]);
+            }
+        }
+    }
 }
 
 
